@@ -1,0 +1,85 @@
+import processing.video.*;
+import processing.serial.*;
+
+Capture cam;
+Serial arduino;
+int cols = 34; // Number of NeoPixel matrix columns
+int rows = 8; // Number of NeoPixel matrix rows
+int totalLEDs = cols * rows;
+int pixelSize = 1; // Adjust this based on your webcam's resolution
+int canvaW = cols*pixelSize;
+int canvaH = rows*pixelSize;
+
+
+void setup() {
+  size(34, 8);
+  background(0);
+  ////camera
+  //String[] devices = Capture.list();
+  //if (devices.length == 0) {
+  //  println("No capture devices found!");
+  //  exit();
+  //} else {
+  //  println("Available capture devices:");
+  //  for (String device : devices) {
+  //    printArray(device);
+  //  }
+  //  cam = new Capture(this, devices[0]);
+  //  cam.start();
+  //}
+  
+  // Set up serial communication with Arduino
+  printArray(Serial.list());
+  arduino = new Serial(this, Serial.list()[2], 115200); // Change baud rate if needed
+  // Ensure the correct port is selected (Serial.list()[0] might need adjustment)
+}
+
+void draw() {
+  
+  //if (cam.available()) {
+  //  cam.read();
+  //}
+  noStroke();
+  fill(255,0,0);
+  rect(0,0,width, height);
+  
+  fill(0,255,0);
+  rect(0,0,width/2, height/2);
+  
+  
+  
+  loadPixels(); //start loading the pixel
+  
+  for (int y = 0; y < rows; y++) {
+    // Alternate rows' direction
+    int xStart = y % 2 == 0 ? 0 : cols - 1;
+    int xEnd = y % 2 == 0 ? cols : -1;
+    int xIncrement = y % 2 == 0 ? 1 : -1;
+
+    for (int x = xStart; x != xEnd; x += xIncrement) {
+      int loc = x + y * width;
+      color c = pixels[loc];
+      int r = (c >> 16) & 0xFF;
+      int g = (c >> 8) & 0xFF;
+      int b = c & 0xFF;
+      
+      int pixelIndex = y * cols + x; 
+  
+println(x);
+   // println(pixelIndex +","+ r +","+ g +","+ b);
+    
+
+    // Send RGB data to Arduino
+
+    arduino.write(pixelIndex);
+
+    arduino.write(r);
+
+    arduino.write(g);
+
+    arduino.write(b);
+    delay(10); // Small delay for stability
+  }
+  }
+  updatePixels();
+}
